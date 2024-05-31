@@ -72,29 +72,27 @@ function getQueue()
 	}
 	local function notCompletedTeams()
 		local notFull = false
-		for k,v in pairs(teams) do
-			if #teams[k].players < 5 then
+		for team,_ in pairs(teams) do
+			if #teams[team].players < 5 then
 				notFull = true
 			end
 		end
 		return notFull
 	end
-	CreateThread(function()
-		while notCompletedTeams() do
-			for k,v in pairs(Queue) do
-				for k2,v2 in pairs(teams) do
-					if #teams[k2].players == 0 or (#teams[k2].players + #v.players <= 5) then
-						for k3, v3 in pairs(v.players) do
-							teams[k2].players[#teams[k2].players+1] = {nick = v3.nick, group = k, leader = v3.leader}
-						end
-						goto next_group
+	while notCompletedTeams() do
+		for group,tablePlayers in pairs(Queue) do
+			for team,_ in pairs(teams) do
+				if #teams[team].players == 0 or (#teams[team].players + #tablePlayers.players <= 5) then
+					for _, player in pairs(tablePlayers.players) do
+						teams[team].players[#teams[team].players+1] = {nick = player.nick, group = group, leader = player.leader}
 					end
+					goto next_group
 				end
-				::next_group::
 			end
-			Wait(500)
+			::next_group::
 		end
-	end)
-	collectgarbage("collect")
+	end
 	return teams
 end
+
+print(json.encode(getQueue(),{indent = true}))
